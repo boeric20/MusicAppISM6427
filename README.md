@@ -99,7 +99,8 @@ npm test
 ## Project layout
 
 ```
-public/                 Static front end (index.html, styles.css, app.js)
+public/                 Static front end (index.html, styles.css, app.js, mark.svg)
+design-system/          Design tokens, brand book and component previews (source of styles.css)
 netlify/functions/      One file per API route
 netlify/lib/            Suno client, HTTP helpers, request validation
 scripts/dev-mock.mjs    Local server with a fake Suno

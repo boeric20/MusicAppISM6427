@@ -1,0 +1,20 @@
+<!-- @dsCard group="Inputs" height=420 -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Preview</title>
+<style>html,body{height:100%}</style></head><body>
+<div class="ds-stage column" style="max-width:440px">
+  <label class="field">
+    <span class="label">Describe the song</span>
+    <textarea rows="3" maxlength="3000" placeholder="A warm acoustic folk song about driving home at dusk, gentle female vocals, fingerpicked guitar"></textarea>
+    <span class="hint">Suno writes the lyrics and structure for you.<span class="count">0 / 3000</span></span>
+  </label>
+  <label class="field">
+    <span class="label">Style <em>optional</em></span>
+    <input type="text" placeholder="folk, acoustic, warm" value="indie folk, fingerpicked guitar">
+  </label>
+  <div class="grid-2">
+    <label class="field"><span class="label">Vocal gender</span><select><option>No preference</option><option>Female</option><option>Male</option></select></label>
+    <label class="field"><span class="label">Style strength <output>0.65</output></span><input type="range" min="0" max="1" step="0.05" value="0.65"></label>
+  </div>
+</div>
+</body></html>
