@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio Suno</title>
+  <meta name="description" content="Generate original music from a text description using the Suno API." />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%236d5dfc'/%3E%3Cpath d='M12 9v12a3 3 0 1 1-2-2.8V12l9-2.3v8.3a3 3 0 1 1-2-2.8V7.5z' fill='white'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Studio Suno</span>
+    </div>
+    <div class="topbar-right">
+      <button id="credits" class="pill" type="button" title="Refresh credit balance">
+        <span class="pill-dot" aria-hidden="true"></span>
+        <span id="credits-text">Credits: …</span>
+      </button>
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme">◐</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- Left: composer -->
+    <section class="panel composer" aria-labelledby="composer-heading">
+      <div class="panel-head">
+        <h1 id="composer-heading">Make a track</h1>
+        <div class="segmented" role="tablist" aria-label="Mode">
+          <button id="mode-simple" class="seg active" role="tab" aria-selected="true" type="button">Simple</button>
+          <button id="mode-custom" class="seg" role="tab" aria-selected="false" type="button">Custom</button>
+        </div>
+      </div>
+
+      <form id="form" novalidate>
+        <!-- Simple mode -->
+        <div id="simple-fields" class="mode-fields">
+          <label class="field">
+            <span class="label">Describe the song</span>
+            <textarea id="s-prompt" rows="4" maxlength="3000"
+              placeholder="A warm acoustic folk song about driving home at dusk, gentle female vocals, fingerpicked guitar"></textarea>
+            <span class="hint">Suno writes the lyrics and structure for you.<span class="count" data-for="s-prompt"></span></span>
+          </label>
+          <label class="field">
+            <span class="label">Style <em>optional</em></span>
+            <input id="s-style" type="text" maxlength="1000" placeholder="folk, acoustic, warm" />
+          </label>
+        </div>
+
+        <!-- Custom mode -->
+        <div id="custom-fields" class="mode-fields" hidden>
+          <label class="field">
+            <span class="label">Title <em>optional</em></span>
+            <input id="c-title" type="text" maxlength="80" placeholder="Dusk Highway" />
+          </label>
+          <label class="field">
+            <span class="label">Style</span>
+            <input id="c-style" type="text" maxlength="1000" placeholder="indie folk, fingerpicked guitar, intimate vocals, 90 bpm" />
+            <span class="hint">Genre, instruments, mood, tempo. Up to 1000 characters.</span>
+          </label>
+          <div class="field">
+            <div class="label-row">
+              <span class="label">Lyrics</span>
+              <button id="ai-lyrics" class="link-btn" type="button">Write lyrics with AI</button>
+            </div>
+            <textarea id="c-lyrics" rows="9" maxlength="5000"
+              placeholder="[Verse]&#10;Tail lights fade along the river bend…&#10;&#10;[Chorus]&#10;…"></textarea>
+            <span class="hint">Use tags like [Verse], [Chorus], [Bridge]. Sung exactly as written.<span class="count" data-for="c-lyrics"></span></span>
+          </div>
+          <label class="field">
+            <span class="label">Exclude <em>optional</em></span>
+            <input id="c-negative" type="text" maxlength="1000" placeholder="heavy drums, autotune" />
+          </label>
+
+          <details class="advanced">
+            <summary>Advanced</summary>
+            <div class="grid-2">
+              <label class="field">
+                <span class="label">Vocal gender</span>
+                <select id="c-gender">
+                  <option value="">No preference</option>
+                  <option value="f">Female</option>
+                  <option value="m">Male</option>
+                </select>
+              </label>
+              <label class="field">
+                <span class="label">Duration (s)</span>
+                <input id="c-duration" type="number" min="10" max="360" step="1" placeholder="auto" />
+              </label>
+              <label class="field">
+                <span class="label">Style strength <output id="c-styleweight-out">0.65</output></span>
+                <input id="c-styleweight" type="range" min="0" max="1" step="0.05" value="0.65" />
+              </label>
+              <label class="field">
+                <span class="label">Weirdness <output id="c-weird-out">0.50</output></span>
+                <input id="c-weird" type="range" min="0" max="1" step="0.05" value="0.5" />
+              </label>
+              <label class="field">
+                <span class="label">Variety</span>
+                <select id="c-variety">
+                  <option value="0">0 · exact style</option>
+                  <option value="1" selected>1 · balanced</option>
+                  <option value="2">2 · distinct</option>
+                  <option value="3">3 · bold</option>
+                  <option value="4">4 · maximum</option>
+                </select>
+              </label>
+            </div>
+          </details>
+        </div>
+
+        <!-- Shared controls -->
+        <div class="row-controls">
+          <label class="switch">
+            <input id="instrumental" type="checkbox" />
+            <span class="track" aria-hidden="true"></span>
+            <span>Instrumental</span>
+          </label>
+          <label class="field inline">
+            <span class="label">Model</span>
+            <select id="model">
+              <option value="V6" selected>V6 · best quality</option>
+              <option value="V6_WILD">V6 Wild · experimental</option>
+              <option value="V6_MINI">V6 Mini · fastest</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="form-error" class="error" role="alert" hidden></div>
+
+        <button id="submit" class="primary" type="submit">
+          <span class="btn-label">Generate</span>
+          <span class="btn-note">2 variations</span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Right: library -->
+    <section class="panel library" aria-labelledby="library-heading">
+      <div class="panel-head">
+        <h2 id="library-heading">Your tracks</h2>
+        <button id="clear-library" class="link-btn" type="button">Clear</button>
+      </div>
+      <div id="jobs" class="jobs"></div>
+      <div id="empty" class="empty">
+        <p>Nothing yet. Describe a song on the left and hit Generate.</p>
+        <p class="muted">Generation takes about one to three minutes. Files stay on Suno's servers for roughly two weeks, so download anything you want to keep.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Lyrics assistant dialog -->
+  <dialog id="lyrics-dialog" class="dialog">
+    <form method="dialog" class="dialog-body">
+      <h3>Write lyrics with AI</h3>
+      <label class="field">
+        <span class="label">What should the song be about?</span>
+        <input id="lyrics-prompt" type="text" maxlength="200" placeholder="Leaving a small town, hopeful but bittersweet" />
+        <span class="hint">Up to 200 characters.<span class="count" data-for="lyrics-prompt"></span></span>
+      </label>
+      <div id="lyrics-status" class="status-line" hidden></div>
+      <div id="lyrics-results" class="lyrics-results"></div>
+      <div class="dialog-actions">
+        <button value="cancel" class="ghost" type="submit">Close</button>
+        <button id="lyrics-go" class="primary small" type="button">Generate lyrics</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Extend dialog -->
+  <dialog id="extend-dialog" class="dialog">
+    <form method="dialog" class="dialog-body">
+      <h3>Extend track</h3>
+      <p id="extend-source" class="muted"></p>
+      <label class="field">
+        <span class="label">Continue from (seconds)</span>
+        <input id="extend-at" type="number" min="1" step="1" />
+        <span class="hint">Suno keeps everything before this point and composes onward.</span>
+      </label>
+      <label class="field">
+        <span class="label">Additional lyrics <em>optional</em></span>
+        <textarea id="extend-lyrics" rows="5" maxlength="5000" placeholder="[Verse 3]&#10;…"></textarea>
+      </label>
+      <label class="field">
+        <span class="label">Style <em>optional</em></span>
+        <input id="extend-style" type="text" maxlength="1000" />
+      </label>
+      <label class="switch">
+        <input id="extend-instrumental" type="checkbox" />
+        <span class="track" aria-hidden="true"></span>
+        <span>Instrumental</span>
+      </label>
+      <div id="extend-error" class="error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button value="cancel" class="ghost" type="submit">Cancel</button>
+        <button id="extend-go" class="primary small" type="button">Extend</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Access code dialog -->
+  <dialog id="access-dialog" class="dialog">
+    <form method="dialog" class="dialog-body">
+      <h3>Access code</h3>
+      <p class="muted">This site is protected. Enter the access code to generate music.</p>
+      <label class="field">
+        <span class="label">Code</span>
+        <input id="access-input" type="password" autocomplete="off" />
+      </label>
+      <div id="access-error" class="error" role="alert" hidden></div>
+      <div class="dialog-actions">
+        <button id="access-go" class="primary small" type="button">Continue</button>
+      </div>
+    </form>
+  </dialog>
+
+  <template id="job-template">
+    <article class="job">
+      <header class="job-head">
+        <div>
+          <h3 class="job-title"></h3>
+          <p class="job-meta"></p>
+        </div>
+        <span class="badge"></span>
+      </header>
+      <div class="progress" aria-hidden="true"><span class="bar"></span></div>
+      <p class="job-status"></p>
+      <div class="tracks"></div>
+      <footer class="job-foot">
+        <button class="link-btn remove" type="button">Remove</button>
+      </footer>
+    </article>
+  </template>
+
+  <template id="track-template">
+    <div class="track-card">
+      <img class="cover" alt="" loading="lazy" />
+      <div class="track-body">
+        <div class="track-title"></div>
+        <div class="track-tags muted"></div>
+        <audio controls preload="none"></audio>
+        <div class="track-actions">
+          <a class="link-btn download" download target="_blank" rel="noopener">Download MP3</a>
+          <button class="link-btn extend" type="button">Extend</button>
+          <button class="link-btn show-lyrics" type="button">Lyrics</button>
+        </div>
+        <pre class="track-lyrics" hidden></pre>
+      </div>
+    </div>
+  </template>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

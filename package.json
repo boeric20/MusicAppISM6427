@@ -1,0 +1,14 @@
+{
+  "name": "musicapp-ism6427",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI music generator built on the sunoapi.org API, deployed on Netlify.",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "test": "node --test test/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

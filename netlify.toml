@@ -1,0 +1,15 @@
+# Netlify configuration for the Suno music generator.
+# Static front end lives in /public; serverless functions live in /netlify/functions.
+
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# Single page app: anything that is not a file or a function falls back to index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
